@@ -7,6 +7,7 @@
 #define 	max 	9
 #define 	size 	16
 #define 	length  3
+#define 	size_t 	2
 
 unsigned char string[max];
 unsigned char error[] = "__ERROR__";
@@ -320,16 +321,13 @@ void checkNumber(void)
 		while(string[i] != '\0')
 		{
 			if(string[i] != '+' && string[i] != '-' && string[i] != '/' && string[i] != '*' && string[i] != '=') // AS LONG AS, EXECUTE THE BODY
-			{
-				number[p] = (string[i]-0x30);		// COVERT THE CHARACTER TO INT NUMBER AND STORES IT INTO NUMBER ARRAY	
-				++p;	
-			}
+				number[p++] = (string[i]-0x30);		// COVERT THE CHARACTER TO INT NUMBER AND STORES IT INTO NUMBER ARRAY		
 			else
 			{
 				switch(p)							// BASED ON NUMBER OF DIGIT WE CHOOSE THE K 
 				{
 					case 1 :
-						k = 1;	
+						k = 1;
 						break;		
 					case 2 :
 						k = 10;
@@ -343,11 +341,10 @@ void checkNumber(void)
 				a = 0;
 				while(a<p)
 				{
-					value += number[a] * k;				// CREAT THE NUMBER BY MULTIPLYING EACH POSITION WITH ITS BASE 
-					++a;	
+					value += number[a++] * k;				// CREAT THE NUMBER BY MULTIPLYING EACH POSITION WITH ITS BASE 	
 					k /= 10;		
 				}
-				if(value >= 500)						// IF NUMBER GREATER THEN 499 PRINT ERROR
+				if(value >= 256)						// IF NUMBER GREATER THEN 499 PRINT ERROR
 				{				
 					state = 1;
 					justDisplayError();
@@ -463,10 +460,7 @@ void clearEntire(void)
 	delay250ms();
 	j = 0;
 	while(j<max)
-	{
-		string[j] = '\0';	
-		++j;
-	}	
+		string[j++] = '\0';	
 	j = 0;
 }
 void justDisplayError(void)
@@ -475,10 +469,9 @@ void justDisplayError(void)
 	clearSecondLine();
 	while(error[i] != '\0')
 	{
-		LATD = error[i];
+		LATD = error[i++];
 		dataInst();
 		busyFlag();
-		++i;
 	}
 	delay250ms();
 	delay250ms();
