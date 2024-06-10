@@ -28,8 +28,8 @@ void secondLine(void);
 void clearEntire(void);
 void justDisplayError(void);
 void clearSecondLine(void);
-void maxRight(unsigned char value);
-
+void maxRight(unsigned char value, unsigned char  mark);
+char findOperator(void);
 
 #pragma interrupt myFunction
 void myFunction(void)
@@ -311,21 +311,22 @@ void busyFlag(void)
 void checkNumber(void)	
 {
 	if(counter >= 2)
-		justDisplayError();
+		justDisplayError();				// DISPLAY ERROR INCASE THERE ARE MORE THEN ONE OPERATOR IN THE OPERATION
 	else
 	{
-		unsigned int number[length], result = 0, k, a, value = 0, val = 0, state = 0;
-		unsigned char i = 0, p = 0;
+		char operator = findOperator();			// FIND THE OPERATOR
+		unsigned int number[length], value = 0, result = 0;
+		unsigned char i = 0, p = 0, val = 0, state = 0, mark = 0, etat = 0,  k, a;
 		while(string[i] != '\0')
 		{
-			if(string[i] != '+' && string[i] != '-' && string[i] != '/' && string[i] != '*' && string[i] != '=')
+			if(string[i] != '+' && string[i] != '-' && string[i] != '/' && string[i] != '*' && string[i] != '=') // AS LONG AS, EXECUTE THE BODY
 			{
-				number[p] = (string[i]-0x30);	
+				number[p] = (string[i]-0x30);		// COVERT THE CHARACTER TO INT NUMBER AND STORES IT INTO NUMBER ARRAY	
 				++p;	
 			}
 			else
 			{
-				switch(p)
+				switch(p)							// BASED ON NUMBER OF DIGIT WE CHOOSE THE K 
 				{
 					case 1 :
 						k = 1;	
@@ -337,58 +338,113 @@ void checkNumber(void)
 						k = 100;
 						break;	
 				}
-				if(val<k)
+				if(val<k)							
 					val = k;
 				a = 0;
 				while(a<p)
 				{
-					value += number[a] * k;
-					++a;
+					value += number[a] * k;				// CREAT THE NUMBER BY MULTIPLYING EACH POSITION WITH ITS BASE 
+					++a;	
 					k /= 10;		
 				}
-				if(value >= 500)
-				{
+				if(value >= 500)						// IF NUMBER GREATER THEN 499 PRINT ERROR
+				{				
 					state = 1;
 					justDisplayError();
 					break;
 				}
 				else
-					result += value;
+				{
+					if(operator == '+')					// IF OPERATION IS ADDITION THEN ADD THE CONTENT
+							result += value;
+					else if(operator == '-')			// IF OPERATION IS SUBTRACTION THEN MARK IS VARIABLE USED TO MARK THE MINUS SIGN
+				 	{
+						if(etat == 0)
+						{
+							etat = 1;				
+							result = value-result;		
+						}
+						else
+						{
+							if(result < value)			// IF A-B (A<B) THEN (B-A) IS THE RESULT + MARK MAKRS THE MINUS SIGN
+							{
+								mark = 1;
+								value = value-result;
+								result = value;
+							}
+							else
+								result -= value;
+						}
+					}
+				}
 				value = 0;
 				p = 0;
 			}		
 			++i;
 		}
-		if(!state)
+		if(!state)								// IF THERE WAS NOT ANY PRINTING OF ERROR EXECUTE THIS BODY
 		{
 			secondLine();
-			maxRight(val);
-			if(val == 1)
+			maxRight(val, mark);				// HERE IS USED TO MOVE THE RESULT IN THE MAX RIGHT OF SECOND LINE
+			if(mark == 0)
 			{
-				LATD = (result%10) + 0x30;
-				dataInst();
-				busyFlag();
+				if(val == 1)					// VAL DENOTES THE BASE OF THE NUMBER
+				{
+					LATD = (result%10) + 0x30;	
+					dataInst();
+					busyFlag();
+				}
+				else if(val == 10)
+				{
+					LATD = (result/val) + 0x30;
+					dataInst();
+					busyFlag();	
+					LATD = (result%val) + 0x30;
+					dataInst();
+					busyFlag();
+				}
+				else
+				{
+					LATD = (result/val) + 0x30;
+					dataInst();
+					busyFlag();	
+					LATD = ((result%val)/10) + 0x30;
+					dataInst();
+					busyFlag();
+					LATD = ((result%val)%10) + 0x30;
+					dataInst();
+					busyFlag();
+				}
 			}
-			else if(val == 10)
+			else	
 			{
-				LATD = (result/val) + 0x30;
-				dataInst();
-				busyFlag();	
-				LATD = (result%10) + 0x30;
-				dataInst();
-				busyFlag();
-			}
-			else
-			{
-				LATD = (result/val) + 0x30;
-				dataInst();
-				busyFlag();	
-				LATD = ((result%100)/10) + 0x30;
-				dataInst();
-				busyFlag();
-				LATD = ((result%100)%10) + 0x30;
-				dataInst();
-				busyFlag();
+				if(val == 1)
+				{
+					LATD = (result%10) + 0x30;
+					dataInst();
+					busyFlag();
+				}
+				else if(val == 10)
+				{
+					LATD = (result/val) + 0x30;
+					dataInst();
+					busyFlag();	
+					LATD = (result%val) + 0x30;
+					dataInst();
+					busyFlag();
+				}
+				else
+				{
+					LATD = (result/val) + 0x30;
+					dataInst();
+					busyFlag();	
+					LATD = ((result%val)/10) + 0x30;
+					dataInst();
+					busyFlag();
+					LATD = ((result%val)%10) + 0x30;
+					dataInst();
+					busyFlag();
+				}
 			}
 		}
 	}
@@ -443,20 +499,48 @@ void clearSecondLine(void)
 	}
 	secondLine();
 }
-void maxRight(unsigned char value)
+void maxRight(unsigned char value, unsigned char  mark)
 {
 	unsigned char i = 0, limit = 0;
-	if(value == 100)
-		limit = 16-3;
-	else if(value == 10)
-		limit = 16-2;
-	else	
-		limit = 16-1;
+	if(mark == 1)
+	{	
+		if(value == 100)
+			limit = size-4;
+		else if(value == 10)
+			limit = size-3;
+		else	
+			limit = size-2;
+	}
+	else
+	{
+		if(value == 100)
+			limit = size-3;
+		else if(value == 10)
+			limit = size-2;
+		else	
+			limit = size-1;
+	}
 	while(i<limit)		
 	{	
 		LATD = 0x14;
 		commandInst();
 		busyFlag();
 		++i;	
+	}
+	if(mark == 1)
+	{
+		LATD = '-';
+		dataInst();
+		busyFlag();
+	}
+}
+char findOperator(void)
+{
+	unsigned char i = 0;
+	while(string[i] != '\0')
+	{	
+		if(string[i] == '+' || string[i] == '-' || string[i] == '/' || string[i] == '*' )
+			return string[i];
+		++i;
 	}
 }
