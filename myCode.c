@@ -1,5 +1,4 @@
 
-/* STILL THE MULTIPLICATION AND THE DIVISION OPERATIONS */
 #include <p18f452.h>
 #pragma config WDT = OFF
 
@@ -21,8 +20,8 @@ near unsigned char state = 0;
 near unsigned char j = 0;
 near unsigned char counter = 0;
 
-void initiaLcd(void);				// INITIALIZATION O LCD
-void delay250ms(void);				// DELAY OF 250 MS
+void initiaLcd(void);			
+void delay250ms(void);		
 void delay3us(void);			
 void commandInst(void);
 void busyFlag(void);				
@@ -35,6 +34,11 @@ void clearSecondLine(void);
 void maxRight(unsigned char  mark);
 char findOperator(void);
 void displayResult(unsigned char state, unsigned char mark, unsigned int result);
+void displayResultFloat(float result_f);
+void display(unsigned int value);
+void displayDot(void);
+void displayFloat(unsigned int value);
+void shift(unsigned char limit);
 
 #pragma interrupt myFunction
 void myFunction(void)
@@ -316,19 +320,20 @@ void busyFlag(void)
 void checkNumber(void)	
 {
 	if(counter >= 2)
-		justDisplayError();				// DISPLAY ERROR INCASE THERE ARE MORE THEN ONE OPERATOR IN THE OPERATION
+		justDisplayError();				// DISPLAY ERROR IN CASE THERE ARE MORE THEN ONE OPERATOR IN ONE OPERATION
 	else
 	{
 		char operator = findOperator();			// FIND THE OPERATOR
 		unsigned int number[length], value = 0, result = 0;
-		unsigned char i = 0, p = 0, state = 0, mark = 0, etat = 0,  k, a;
+		unsigned char i = 0, p = 0, state = 0, mark = 0, etat = 0,  k, a, fixFloat = 0;
+		float result_f = 0;
 		while(string[i] != '\0')
 		{
-			if(string[i] != '+' && string[i] != '-' && string[i] != '/' && string[i] != '*' && string[i] != '=') // AS LONG AS, EXECUTE THE BODY
-				number[p++] = (string[i]-0x30);		// COVERT THE CHARACTER TO INT NUMBER AND STORES IT INTO NUMBER ARRAY		
+			if(string[i] != '+' && string[i] != '-' && string[i] != '/' && string[i] != '*' && string[i] != '=') 
+				number[p++] = (string[i]-0x30);			
 			else
 			{
-				switch(p)							// BASED ON NUMBER OF DIGIT WE CHOOSE THE K 
+				switch(p)						
 				{
 					case 1 :
 						k = 1;
@@ -346,7 +351,7 @@ void checkNumber(void)
 					value += number[a++] * k;				// CREAT THE NUMBER BY MULTIPLYING EACH POSITION WITH ITS BASE 	
 					k /= 10;		
 				}
-				if(value >= 256)						// IF NUMBER GREATER THEN 499 PRINT ERROR
+				if(value >= 256)						// IF NUMBER GREATER THEN 256 PRINT ERROR
 				{				
 					state = 1;
 					justDisplayError();
@@ -354,9 +359,9 @@ void checkNumber(void)
 				}
 				else
 				{
-					if(operator == '+')					// IF OPERATION IS ADDITION THEN ADD THE CONTENT
+					if(operator == '+')					// ADDITION OPERATION
 							result += value;
-					else if(operator == '-')			// IF OPERATION IS SUBTRACTION THEN MARK IS VARIABLE USED TO MARK THE MINUS SIGN
+					else if(operator == '-')			// SUBTRCUTION OPERATION	
 				 	{
 						if(etat == 0)
 						{
@@ -365,9 +370,9 @@ void checkNumber(void)
 						}
 						else
 						{
-							if(result < value)			// IF A-B (A<B) THEN (B-A) IS THE RESULT + MARK MAKRS THE MINUS SIGN
+							if(result < value)		
 							{
-								mark = 1;
+								mark = 1;				// MARKS THE MINUS SIGN
 								value = value-result;
 								result = value;
 							}
@@ -375,7 +380,7 @@ void checkNumber(void)
 								result -= value;
 						}
 					}
-					else if(operator == '*')
+					else if(operator == '*')			// MULTIPLICATION OPERATION		
 					{
 						if(etat == 0)
 						{
@@ -385,22 +390,36 @@ void checkNumber(void)
 						else
 							result = result * value;
 					}
+					else								// DIVISION OPERATION
+					{
+						fixFloat = 1;
+						if(etat == 0)
+						{
+							etat = 1;				
+							result_f = value / 1;
+						}
+						else
+							result_f = (result_f / (float)value);			
+					}
 				}
 				value = 0;
 				p = 0;
 			}		
 			++i;
 		}
-		displayResult(state, mark, result);
+		if(!fixFloat)							// EXECUTE THE BODY INCASE NO DIVISION OPERATION
+			displayResult(state, mark, result);
+		else									// DIVISION OPERATION
+			displayResultFloat(result_f);
 	}
 }
-void secondLine(void)
+void secondLine(void)							// JUMP SECOND LINE
 {
-	LATD = 0xC0;
+	LATD = 0xC0;						
 	commandInst();
 	busyFlag();
 }
-void clearEntire(void)
+void clearEntire(void)							// CLEAR THE ARRAY + THE ENTIRE SCREEN
 {
 	counter = 0;
 	LATD = 0x01;
@@ -411,7 +430,7 @@ void clearEntire(void)
 		string[j++] = '\0';	
 	j = 0;
 }
-void justDisplayError(void)
+void justDisplayError(void)					// FUNCTION TO DISPLAY ONLY THE ERROR STRING
 {
 	unsigned char i = 0;
 	clearSecondLine();
@@ -427,7 +446,7 @@ void justDisplayError(void)
 	delay250ms();
 	clearSecondLine();
 }
-void clearSecondLine(void)
+void clearSecondLine(void)					// CLEAR THE SECOND LINE
 {
 	unsigned char i = 0;
 	secondLine();
@@ -440,23 +459,17 @@ void clearSecondLine(void)
 	}
 	secondLine();
 }
-void maxRight(unsigned char  mark)
+void maxRight(unsigned char  mark)			// BASED ON MARK WE SHIFT THE CURSOR TO THE RIGHT SECOND LINE 
 {
 	unsigned char i = 0, limit = 0;
 	if(mark == 1)
 		limit = size-6;
 	else
 		limit = size-5;
-	while(i<limit)		
-	{	
-		LATD = 0x14;
-		commandInst();
-		busyFlag();
-		++i;	
-	}
+	shift(limit);
 	if(mark == 1)
 	{
-		LATD = '-';
+		LATD = '-';							// DISPLAY THE MINUS SIGN IF MARK == 1
 		dataInst();
 		busyFlag();
 	}
@@ -471,26 +484,69 @@ char findOperator(void)
 		++i;
 	}
 }
-void displayResult(unsigned char state, unsigned char mark, unsigned int result)
+void displayResult(unsigned char state, unsigned char mark, unsigned int result)		// DISPLAY INTEGER RESULT
 {
-	if(!state)						
+	if(!state)																			// STATE INDICATE THERE WASN'T ANY NUMBER > 255					
 	{
 		secondLine();
-		maxRight(mark);		
-		LATD = (result/len) + 0x30;
-		dataInst();		
-		busyFlag();
-		LATD = ((result%len)/(len/10)) + 0x30;
-		dataInst();		
-		busyFlag();
-		LATD = (((result%len)%(len/10))/(len/100)) + 0x30;
-		dataInst();		
-		busyFlag();
-		LATD = ((((result%len)%(len/10))%(len/100))/(len/1000)) + 0x30;
-		dataInst();		
-		busyFlag();
-		LATD = ((((result%len)%(len/10))%(len/100))%(len/1000)) + 0x30;
-		dataInst();		
-		busyFlag();
+		maxRight(mark);
+		display(result);	
 	}
+}	
+void displayResultFloat(float result_f)									// DISPLAY FLOAT RESULT
+{
+	unsigned char limit = size-8;
+	unsigned int value = result_f;										// TAKE THE CORRECT PART
+	secondLine();
+	shift(limit);
+	display(value);														// DISPLAY THE CORRECT PART
+	displayDot();														// DISLAY DOT 
+	result_f = result_f - (float)value;									// TAKE THE DECIMAL PART
+	result_f = result_f * 100;											// TWO DIGIT AFTER THE DECIMAL POINT
+	value = (int)result_f;
+	displayFloat(value);												// DISPLAY THE DECIMAL PART
+}
+void display(unsigned int value)
+{	
+	LATD = (value/len) + 0x30;										
+	dataInst();		
+	busyFlag();
+	LATD = ((value%len)/(len/10)) + 0x30;
+	dataInst();		
+	busyFlag();
+	LATD = (((value%len)%(len/10))/(len/100)) + 0x30;
+	dataInst();		
+	busyFlag();
+	LATD = ((((value%len)%(len/10))%(len/100))/(len/1000)) + 0x30;
+	dataInst();		
+	busyFlag();
+	LATD = ((((value%len)%(len/10))%(len/100))%(len/1000)) + 0x30;
+	dataInst();		
+	busyFlag();
+}
+void displayDot(void)
+{
+	LATD = '.';
+	dataInst();
+	busyFlag();
+}
+void displayFloat(unsigned int value)
+{	
+	LATD = (value/10) + 0x30;
+	dataInst();		
+	busyFlag();
+	LATD = (value%10) + 0x30;
+	dataInst();		
+	busyFlag();
+}
+void shift(unsigned char limit)					// THIS SHIFT FUNCTION USED IN CASE OF DIVISION OPERATION
+{
+	unsigned char i = 0;
+	while(i<limit)		
+	{	
+		LATD = 0x14;
+		commandInst();
+		busyFlag();
+		++i;	
+	}	
 }
