@@ -375,6 +375,16 @@ void checkNumber(void)
 								result -= value;
 						}
 					}
+					else if(operator == '*')
+					{
+						if(etat == 0)
+						{
+							etat = 1;				
+							result = value * 1;		
+						}
+						else
+							result = result * value;
+					}
 				}
 				value = 0;
 				p = 0;
