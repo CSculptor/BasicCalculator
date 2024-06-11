@@ -10,3 +10,15 @@ https://github.com/LatifEmbedded/Keypad-Lcd-Calculator/assets/155848361/107a886e
 | OPERATION | STATE |
 | --------- | ----- |
 | a   +   b | allowed |
+| --------- | ----- |
+| a   -  b  | allowed |
+| --------- | ----- |
+| a   * b   | allowed |
+| --------- | ----- |
+| a    /  b | allowed |
+| --------- | ----- |
+| + a  -  b | not allowed |
+| --------- | ----- |
+| - a  -  b | not allowed |
+| --------- | ----- |
+| - a  +  b | not allowed |
