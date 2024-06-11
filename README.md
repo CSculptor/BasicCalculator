@@ -1,6 +1,6 @@
 ### BASIC CALCULATOR USING KEYPAD : 
 
-This project involves a basic calculator using the PIC18F452 microcontroller, an LCD display, and a keypad. 
+This project involves a basic calculator using the PIC18F452 microcontroller, an LCD display, and keypad. 
 The calculator supports basic arithmetic operations (+, -, *, /) and only perform one operation at a time. 
 The maximum input number allowed is 255.
 
