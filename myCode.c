@@ -1,3 +1,5 @@
+
+/* STILL THE MULTIPLICATION AND THE DIVISION OPERATIONS */
 #include <p18f452.h>
 #pragma config WDT = OFF
 
@@ -8,6 +10,7 @@
 #define 	size 	16
 #define 	length  3
 #define 	size_t 	2
+#define 	len     10000
 
 unsigned char string[max];
 unsigned char error[] = "__ERROR__";
@@ -29,9 +32,9 @@ void secondLine(void);
 void clearEntire(void);
 void justDisplayError(void);
 void clearSecondLine(void);
-void maxRight(unsigned char value, unsigned char  mark);
+void maxRight(unsigned char  mark);
 char findOperator(void);
-void displayResult(unsigned char state, unsigned char mark, unsigned int result, unsigned char val);
+void displayResult(unsigned char state, unsigned char mark, unsigned int result);
 
 #pragma interrupt myFunction
 void myFunction(void)
@@ -318,7 +321,7 @@ void checkNumber(void)
 	{
 		char operator = findOperator();			// FIND THE OPERATOR
 		unsigned int number[length], value = 0, result = 0;
-		unsigned char i = 0, p = 0, val = 0, state = 0, mark = 0, etat = 0,  k, a;
+		unsigned char i = 0, p = 0, state = 0, mark = 0, etat = 0,  k, a;
 		while(string[i] != '\0')
 		{
 			if(string[i] != '+' && string[i] != '-' && string[i] != '/' && string[i] != '*' && string[i] != '=') // AS LONG AS, EXECUTE THE BODY
@@ -337,8 +340,6 @@ void checkNumber(void)
 						k = 100;
 						break;	
 				}
-				if(val<k)							
-					val = k;
 				a = 0;
 				while(a<p)
 				{
@@ -380,7 +381,7 @@ void checkNumber(void)
 			}		
 			++i;
 		}
-		displayResult(state, mark, result, val);
+		displayResult(state, mark, result);
 	}
 }
 void secondLine(void)
@@ -429,25 +430,13 @@ void clearSecondLine(void)
 	}
 	secondLine();
 }
-void maxRight(unsigned char value, unsigned char  mark)
+void maxRight(unsigned char  mark)
 {
 	unsigned char i = 0, limit = 0;
 	if(mark == 1)
-	{	
-		if(value == 100)
-			limit = size-4;
-		else if(value == 10)
-			limit = size-3;
-		else	
-			limit = size-2;
-	}
+		limit = size-6;
 	else
-	{
-		if(value == 100)
-			limit = size-3;
-		else if(value == 10 || value == 1)
-			limit = size-2;
-	}
+		limit = size-5;
 	while(i<limit)		
 	{	
 		LATD = 0x14;
@@ -472,86 +461,26 @@ char findOperator(void)
 		++i;
 	}
 }
-void displayResult(unsigned char state, unsigned char mark, unsigned int result, unsigned char val)
+void displayResult(unsigned char state, unsigned char mark, unsigned int result)
 {
 	if(!state)						
 	{
 		secondLine();
-		maxRight(val, mark);		
-		if(mark == 0)
-		{
-			if(val == 1)			
-			{
-				if(result <= 9)
-				{
-					LATD = (result/10) + 0x30;	
-					dataInst();
-					busyFlag();
-					LATD = (result%10) + 0x30;	
-					dataInst();
-					busyFlag();
-				}
-				else
-				{
-					LATD = (result/10) + 0x30;	
-					dataInst();
-					busyFlag();
-					LATD = (result%10) + 0x30;	
-					dataInst();
-					busyFlag();
-				}
-			}
-			else if(val == 10)
-			{
-				LATD = (result/val) + 0x30;
-				dataInst();
-				busyFlag();	
-				LATD = (result%val) + 0x30;
-				dataInst();
-				busyFlag();
-			}
-			else
-			{
-				LATD = (result/val) + 0x30;
-				dataInst();
-				busyFlag();	
-				LATD = ((result%val)/10) + 0x30;
-				dataInst();
-				busyFlag();
-				LATD = ((result%val)%10) + 0x30;
-				dataInst();
-				busyFlag();
-			}
-		}
-		else	
-		{
-			if(val == 1)
-			{
-				LATD = (result%10) + 0x30;
-				dataInst();
-				busyFlag();
-			}
-			else if(val == 10)
-			{
-				LATD = (result/val) + 0x30;
-				dataInst();
-				busyFlag();	
-				LATD = (result%val) + 0x30;
-				dataInst();
-				busyFlag();
-			}
-			else
-			{
-				LATD = (result/val) + 0x30;
-				dataInst();
-				busyFlag();	
-				LATD = ((result%val)/10) + 0x30;
-				dataInst();
-				busyFlag();
-				LATD = ((result%val)%10) + 0x30;
-				dataInst();
-				busyFlag();
-			}
-		}
+		maxRight(mark);		
+		LATD = (result/len) + 0x30;
+		dataInst();		
+		busyFlag();
+		LATD = ((result%len)/(len/10)) + 0x30;
+		dataInst();		
+		busyFlag();
+		LATD = (((result%len)%(len/10))/(len/100)) + 0x30;
+		dataInst();		
+		busyFlag();
+		LATD = ((((result%len)%(len/10))%(len/100))/(len/1000)) + 0x30;
+		dataInst();		
+		busyFlag();
+		LATD = ((((result%len)%(len/10))%(len/100))%(len/1000)) + 0x30;
+		dataInst();		
+		busyFlag();
 	}
 }
