@@ -31,6 +31,7 @@ void justDisplayError(void);
 void clearSecondLine(void);
 void maxRight(unsigned char value, unsigned char  mark);
 char findOperator(void);
+void displayResult(unsigned char state, unsigned char mark, unsigned int result, unsigned char val);
 
 #pragma interrupt myFunction
 void myFunction(void)
@@ -379,71 +380,7 @@ void checkNumber(void)
 			}		
 			++i;
 		}
-		if(!state)								// IF THERE WAS NOT ANY PRINTING OF ERROR EXECUTE THIS BODY
-		{
-			secondLine();
-			maxRight(val, mark);				// HERE IS USED TO MOVE THE RESULT IN THE MAX RIGHT OF SECOND LINE
-			if(mark == 0)
-			{
-				if(val == 1)					// VAL DENOTES THE BASE OF THE NUMBER
-				{
-					LATD = (result%10) + 0x30;	
-					dataInst();
-					busyFlag();
-				}
-				else if(val == 10)
-				{
-					LATD = (result/val) + 0x30;
-					dataInst();
-					busyFlag();	
-					LATD = (result%val) + 0x30;
-					dataInst();
-					busyFlag();
-				}
-				else
-				{
-					LATD = (result/val) + 0x30;
-					dataInst();
-					busyFlag();	
-					LATD = ((result%val)/10) + 0x30;
-					dataInst();
-					busyFlag();
-					LATD = ((result%val)%10) + 0x30;
-					dataInst();
-					busyFlag();
-				}
-			}
-			else	
-			{
-				if(val == 1)
-				{
-					LATD = (result%10) + 0x30;
-					dataInst();
-					busyFlag();
-				}
-				else if(val == 10)
-				{
-					LATD = (result/val) + 0x30;
-					dataInst();
-					busyFlag();	
-					LATD = (result%val) + 0x30;
-					dataInst();
-					busyFlag();
-				}
-				else
-				{
-					LATD = (result/val) + 0x30;
-					dataInst();
-					busyFlag();	
-					LATD = ((result%val)/10) + 0x30;
-					dataInst();
-					busyFlag();
-					LATD = ((result%val)%10) + 0x30;
-					dataInst();
-					busyFlag();
-				}
-			}
-		}
+		displayResult(state, mark, result, val);
 	}
 }
 void secondLine(void)
@@ -508,10 +445,8 @@ void maxRight(unsigned char value, unsigned char  mark)
 	{
 		if(value == 100)
 			limit = size-3;
-		else if(value == 10)
+		else if(value == 10 || value == 1)
 			limit = size-2;
-		else	
-			limit = size-1;
 	}
 	while(i<limit)		
 	{	
@@ -535,5 +470,88 @@ char findOperator(void)
 		if(string[i] == '+' || string[i] == '-' || string[i] == '/' || string[i] == '*' )
 			return string[i];
 		++i;
+	}
+}
+void displayResult(unsigned char state, unsigned char mark, unsigned int result, unsigned char val)
+{
+	if(!state)						
+	{
+		secondLine();
+		maxRight(val, mark);		
+		if(mark == 0)
+		{
+			if(val == 1)			
+			{
+				if(result <= 9)
+				{
+					LATD = (result/10) + 0x30;	
+					dataInst();
+					busyFlag();
+					LATD = (result%10) + 0x30;	
+					dataInst();
+					busyFlag();
+				}
+				else
+				{
+					LATD = (result/10) + 0x30;	
+					dataInst();
+					busyFlag();
+					LATD = (result%10) + 0x30;	
+					dataInst();
+					busyFlag();
+				}
+			}
+			else if(val == 10)
+			{
+				LATD = (result/val) + 0x30;
+				dataInst();
+				busyFlag();	
+				LATD = (result%val) + 0x30;
+				dataInst();
+				busyFlag();
+			}
+			else
+			{
+				LATD = (result/val) + 0x30;
+				dataInst();
+				busyFlag();	
+				LATD = ((result%val)/10) + 0x30;
+				dataInst();
+				busyFlag();
+				LATD = ((result%val)%10) + 0x30;
+				dataInst();
+				busyFlag();
+			}
+		}
+		else	
+		{
+			if(val == 1)
+			{
+				LATD = (result%10) + 0x30;
+				dataInst();
+				busyFlag();
+			}
+			else if(val == 10)
+			{
+				LATD = (result/val) + 0x30;
+				dataInst();
+				busyFlag();	
+				LATD = (result%val) + 0x30;
+				dataInst();
+				busyFlag();
+			}
+			else
+			{
+				LATD = (result/val) + 0x30;
+				dataInst();
+				busyFlag();	
+				LATD = ((result%val)/10) + 0x30;
+				dataInst();
+				busyFlag();
+				LATD = ((result%val)%10) + 0x30;
+				dataInst();
+				busyFlag();
+			}
+		}
 	}
 }
