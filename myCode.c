@@ -403,7 +403,7 @@ void checkNumber(void)
 							if(result < value)		
 							{
 								mark = 1;				// MARKS THE MINUS SIGN
-								value = value-result;
+								value -= result;
 								result = value;
 							}
 							else
@@ -412,13 +412,29 @@ void checkNumber(void)
 					}
 					else if(operator == '*')			// MULTIPLICATION OPERATION		
 					{
-						if(etat == 0)
+						if(kish == 1)
 						{
-							etat = 1;				
-							result = value * 1;		
+							if(etat == 0)
+							{
+								etat = 1;				
+								result = value * 1;		
+							}
+							else
+							{
+								mark = 1;
+								result *= value;
+							}
 						}
 						else
-							result = result * value;
+						{
+							if(etat == 0)
+							{
+								etat = 1;				
+								result = value;		
+							}
+							else
+								result *= value;
+						}
 					}
 					else								// DIVISION OPERATION
 					{
@@ -426,7 +442,7 @@ void checkNumber(void)
 						if(etat == 0)
 						{
 							etat = 1;				
-							result_f = value / 1;
+							result_f = value;
 						}
 						else
 							result_f = (result_f / (float)value);			
@@ -459,6 +475,7 @@ void clearEntire(void)							// CLEAR THE ARRAY + THE ENTIRE SCREEN
 	while(j<max)
 		string[j++] = '\0';	
 	j = 0;
+	kish = 0;
 }
 void justDisplayError(void)					// FUNCTION TO DISPLAY ONLY THE ERROR STRING
 {
