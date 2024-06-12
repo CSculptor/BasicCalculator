@@ -1,8 +1,7 @@
 ### BASIC CALCULATOR USING KEYPAD : 
 
 This project involves a basic calculator using the PIC18F452 microcontroller, an LCD display, and keypad. 
-The calculator supports basic arithmetic operations (+, -, *, /) and only perform one operation at a time. 
-The maximum input number allowed is 255, other then an error is displayed.
+The calculator supports basic arithmetic operations (+, -, *, /). 
 
 
 
@@ -14,10 +13,14 @@ https://github.com/LatifEmbedded/Keypad-Lcd-Calculator/assets/155848361/107a886e
 | a   +   b | allowed |
 | a   -  b  | allowed |
 | a   * b   | allowed |
-| a    /  b | allowed |
-| - a  /  b | not allowed |
-| + a  -  b | allowed |
-| - a  *  b | allowed |
-| - a  -  b | allowed |
+| a   /  b | allowed |
+| -a  /  b | not allowed |
+| +a  -  b | allowed |
+| -a  *  b | allowed |
+| -a  -  b | allowed |
 | -a  +  b | allowed |
-| a + b - c | not allowed|
+
+
+### NOTE : 
+The maximum input number allowed is 255, other then an error is displayed.
+one operation at a time for example (a+b+c), (a-b+c), (a-b-c) is not allowed.
