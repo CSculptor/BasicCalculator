@@ -19,6 +19,8 @@ unsigned char error[] = "__ERROR__";
 near unsigned char state = 0;
 near unsigned char j = 0;
 near unsigned char counter = 0;
+near unsigned char kish = 0;
+
 
 void initiaLcd(void);			
 void delay250ms(void);		
@@ -39,6 +41,7 @@ void display(unsigned int value);
 void displayDot(void);
 void displayFloat(unsigned int value);
 void shift(unsigned char limit);
+unsigned char checkOperatorFirst(void);
 
 #pragma interrupt myFunction
 void myFunction(void)
@@ -57,10 +60,7 @@ void myFunction(void)
 			{
 				if(PORTBbits.RB4 == 0)
 				{
-					LATD = '=';
 					string[j++] = '=';
-					dataInst();
-					busyFlag();	
 					checkNumber();
 				}
 			}
@@ -88,7 +88,7 @@ void myFunction(void)
 				else if(PORTBbits.RB6 == 0)
 				{
 					LATD = 0x2A;
-					string[j++] = LATD;
+					string[j++] = LATD;	
 					dataInst();
 					busyFlag();	
 					++counter;
@@ -106,10 +106,7 @@ void myFunction(void)
 			{
 				if(PORTBbits.RB4 == 0)
 				{
-					LATD = '=';
 					string[j++] = '=';
-					dataInst();
-					busyFlag();	
 					checkNumber();
 				}
 				else if(PORTBbits.RB5 == 0)	
@@ -153,7 +150,7 @@ void myFunction(void)
 				else if(PORTBbits.RB6 == 0)
 				{
 					LATD = '5';
-					string[j++] = '5';;
+					string[j++] = '5';
 					dataInst();
 					busyFlag();
 				}
@@ -319,14 +316,23 @@ void busyFlag(void)
 }
 void checkNumber(void)	
 {
+	unsigned int number[length], value = 0, result = 0;
+	unsigned char i = 0, p = 0, state = 0, mark = 0, etat = 0,  k, a, fixFloat = 0, choose = 0, hola = 0;
+	float result_f = 0;
 	if(counter >= 2)
-		justDisplayError();				// DISPLAY ERROR IN CASE THERE ARE MORE THEN ONE OPERATOR IN ONE OPERATION
-	else
+	{
+		hola = checkOperatorFirst();
+		if(!hola)
+			justDisplayError();				// DISPLAY ERROR IN CASE THERE ARE MORE THEN ONE OPERATOR IN ONE OPERATION
+		else
+		{	
+			if(kish == 1 || kish == 2)	
+				i = 1;
+		}
+	}
+	if(hola == 1 || counter == 1)
 	{
 		char operator = findOperator();			// FIND THE OPERATOR
-		unsigned int number[length], value = 0, result = 0;
-		unsigned char i = 0, p = 0, state = 0, mark = 0, etat = 0,  k, a, fixFloat = 0;
-		float result_f = 0;
 		while(string[i] != '\0')
 		{
 			if(string[i] != '+' && string[i] != '-' && string[i] != '/' && string[i] != '*' && string[i] != '=') 
@@ -360,7 +366,31 @@ void checkNumber(void)
 				else
 				{
 					if(operator == '+')					// ADDITION OPERATION
-							result += value;
+					{
+							if(kish == 1)
+							{
+								if(choose == 0)
+								{
+									choose = 1;
+									result = value;
+								}
+								else
+								{
+									if(result < value)		
+									{
+										value -= result;
+										result = value;
+									}
+									else
+									{
+										mark = 1;
+										result -= value;
+									}
+								}
+							}
+							else
+								result += value;
+					}
 					else if(operator == '-')			// SUBTRCUTION OPERATION	
 				 	{
 						if(etat == 0)
@@ -477,6 +507,10 @@ void maxRight(unsigned char  mark)			// BASED ON MARK WE SHIFT THE CURSOR TO THE
 char findOperator(void)
 {
 	unsigned char i = 0;
+	if(kish == 1 || kish == 2)
+		i = 1;
+	else
+		i = 0;
 	while(string[i] != '\0')
 	{	
 		if(string[i] == '+' || string[i] == '-' || string[i] == '/' || string[i] == '*' )
@@ -549,4 +583,22 @@ void shift(unsigned char limit)					// THIS SHIFT FUNCTION USED IN CASE OF DIVIS
 		busyFlag();
 		++i;	
 	}	
+}
+unsigned char checkOperatorFirst(void)
+{
+	unsigned char i = 1, state = 0, count = 0;
+	if(string[0] == '-')
+		kish = 1;
+	else if(string[0] == '+')
+		kish = 2;
+	while(string[i] != '\0')
+	{
+		if(string[i] == '-' || string[i] == '+' || string[i] == '/' || string[i] == '*')
+			++count;	
+		++i;
+	}
+	if(count == 1)
+		return 1;
+	else
+		return 0;
 }
