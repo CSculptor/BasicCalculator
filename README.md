@@ -2,7 +2,7 @@
 
 This project involves a basic calculator using the PIC18F452 microcontroller, an LCD display, and keypad. 
 The calculator supports basic arithmetic operations (+, -, *, /) and only perform one operation at a time. 
-The maximum input number allowed is 255.
+The maximum input number allowed is 255, other then an error is displayed.
 
 
 
