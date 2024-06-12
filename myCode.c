@@ -393,22 +393,38 @@ void checkNumber(void)
 					}
 					else if(operator == '-')			// SUBTRCUTION OPERATION	
 				 	{
-						if(etat == 0)
-						{
-							etat = 1;				
-							result = value-result;		
+						if(kish == 1)			
+						{	
+							if(etat == 0)
+							{
+								etat = 1;				
+								result = value;		
+							}
+							else
+							{
+								mark = 1;				// MARKS THE MINUS SIGN
+								result += value;
+							}
 						}
 						else
 						{
-							if(result < value)		
+							if(etat == 0)
 							{
-								mark = 1;				// MARKS THE MINUS SIGN
-								value -= result;
-								result = value;
+								etat = 1;				
+								result = value;		
 							}
 							else
-								result -= value;
-						}
+							{
+								if(result < value)
+								{
+									mark  =1;
+									value -= result;
+									result = value;
+								}
+								else
+									result -= value;
+							}
+						}	
 					}
 					else if(operator == '*')			// MULTIPLICATION OPERATION		
 					{
