@@ -1,3 +1,14 @@
+/*
+**********************************************
+
+*	CREATOR : DALI FETHI ABDELLATIF
+*	START DATE : 10/06/2024
+*	PLATFORM : PIC18F452
+*	COMPILER : C18 MICROCHIP COMPILER
+*	PROJECT NAME : BASIC CALCULATOR WITH KEYPAD
+
+************************************************	
+*/
 
 #include <p18f452.h>
 #pragma config WDT = OFF
@@ -36,12 +47,14 @@ void clearSecondLine(void);
 void maxRight(unsigned char  mark);
 char findOperator(void);
 void displayResult(unsigned char state, unsigned char mark, unsigned int result);
-void displayResultFloat(float result_f);
+void displayResultFloat(float result_f, unsigned char mark);
 void display(unsigned int value);
 void displayDot(void);
 void displayFloat(unsigned int value);
 void shift(unsigned char limit);
 unsigned char checkOperatorFirst(void);
+void displayMinus(unsigned char mark);
+void timer0Generation(void);
 
 #pragma interrupt myFunction
 void myFunction(void)
@@ -268,21 +281,13 @@ void delay250ms(void)
 		T0CON = 0x01;
 		TMR0H = 0x0B;
 		TMR0L = 0xBC;
-		INTCONbits.TMR0IF = 0;
-		T0CONbits.TMR0ON = 1;
-		while(INTCONbits.TMR0IF == 0);
-		INTCONbits.TMR0IF = 0;
-		T0CONbits.TMR0ON = 0;	
+		timer0Generation();		
 }
 void delay3us(void)
 {
 		T0CON = 0x48;
 		TMR0L = 253;
-		INTCONbits.TMR0IF = 0;
-		T0CONbits.TMR0ON = 1;
-		while(INTCONbits.TMR0IF == 0);
-		INTCONbits.TMR0IF = 0;
-		T0CONbits.TMR0ON = 0;	
+		timer0Generation();
 }
 void commandInst(void)
 {
@@ -455,13 +460,29 @@ void checkNumber(void)
 					else								// DIVISION OPERATION
 					{
 						fixFloat = 1;
-						if(etat == 0)
+						if(kish == 1)
 						{
-							etat = 1;				
-							result_f = value;
+							if(etat == 0)
+							{
+								etat = 1;				
+								result_f = value;
+							}
+							else
+							{
+								mark = 1;
+								result_f = (result_f / (float)value);
+							}			
 						}
 						else
-							result_f = (result_f / (float)value);			
+						{
+							if(etat == 0)
+							{
+								etat = 1;				
+								result_f = value;
+							}
+							else
+								result_f = (result_f / (float)value);
+						}	
 					}
 				}
 				value = 0;
@@ -469,10 +490,13 @@ void checkNumber(void)
 			}		
 			++i;
 		}
-		if(!fixFloat)							// EXECUTE THE BODY INCASE NO DIVISION OPERATION
-			displayResult(state, mark, result);
-		else									// DIVISION OPERATION
-			displayResultFloat(result_f);
+		if(!state)
+		{
+			if(!fixFloat)							// EXECUTE THE BODY INCASE NO DIVISION OPERATION
+				displayResult(state, mark, result);
+			else									// DIVISION OPERATION
+				displayResultFloat(result_f, mark);
+		}
 	}
 }
 void secondLine(void)							// JUMP SECOND LINE
@@ -483,7 +507,6 @@ void secondLine(void)							// JUMP SECOND LINE
 }
 void clearEntire(void)							// CLEAR THE ARRAY + THE ENTIRE SCREEN
 {
-	counter = 0;
 	LATD = 0x01;
 	commandInst();	
 	delay250ms();
@@ -492,6 +515,8 @@ void clearEntire(void)							// CLEAR THE ARRAY + THE ENTIRE SCREEN
 		string[j++] = '\0';	
 	j = 0;
 	kish = 0;
+	state = 0;
+	counter = 0;
 }
 void justDisplayError(void)					// FUNCTION TO DISPLAY ONLY THE ERROR STRING
 {
@@ -530,12 +555,7 @@ void maxRight(unsigned char  mark)			// BASED ON MARK WE SHIFT THE CURSOR TO THE
 	else
 		limit = size-5;
 	shift(limit);
-	if(mark == 1)
-	{
-		LATD = '-';							// DISPLAY THE MINUS SIGN IF MARK == 1
-		dataInst();
-		busyFlag();
-	}
+	displayMinus(mark);
 }
 char findOperator(void)
 {
@@ -552,21 +572,28 @@ char findOperator(void)
 	}
 }
 void displayResult(unsigned char state, unsigned char mark, unsigned int result)		// DISPLAY INTEGER RESULT
-{
-	if(!state)																			// STATE INDICATE THERE WASN'T ANY NUMBER > 255					
-	{
-		secondLine();
-		maxRight(mark);
-		display(result);	
-	}
-}	
-void displayResultFloat(float result_f)									// DISPLAY FLOAT RESULT
-{
-	unsigned char limit = size-8;
-	unsigned int value = result_f;										// TAKE THE CORRECT PART
+{			
 	secondLine();
-	shift(limit);
-	display(value);														// DISPLAY THE CORRECT PART
+	maxRight(mark);
+	display(result);
+}	
+void displayResultFloat(float result_f, unsigned char mark)								// DISPLAY FLOAT RESULT
+{
+	unsigned char limit;
+	unsigned int value = result_f;	
+	secondLine();									
+	if(!mark)	
+	{
+		limit = size-8;
+		shift(limit);
+	}
+	else
+	{
+		limit = size-9;
+		shift(limit);
+		displayMinus(mark);
+	}
+	display(value);													
 	displayDot();														// DISLAY DOT 
 	result_f = result_f - (float)value;									// TAKE THE DECIMAL PART
 	result_f = result_f * 100;											// TWO DIGIT AFTER THE DECIMAL POINT
@@ -634,4 +661,21 @@ unsigned char checkOperatorFirst(void)
 		return 1;
 	else
 		return 0;
+}
+void displayMinus(unsigned char mark)
+{
+	if(mark == 1)
+	{
+		LATD = '-';							// DISPLAY THE MINUS SIGN IF MARK == 1
+		dataInst();
+		busyFlag();
+	}
+}
+void timer0Generation(void)
+{
+	INTCONbits.TMR0IF = 0;
+	T0CONbits.TMR0ON = 1;
+	while(INTCONbits.TMR0IF == 0);
+	INTCONbits.TMR0IF = 0;
+	T0CONbits.TMR0ON = 0;	
 }
