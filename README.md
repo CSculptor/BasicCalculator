@@ -5,7 +5,9 @@
 
 
 
-https://github.com/LatifEmbedded/Keypad-Lcd-Calculator/assets/155848361/107a886e-3018-45b5-9d57-aa237c8a4979
+
+https://github.com/LatifEmbedded/Keypad-Lcd-Calculator/assets/155848361/57b4c48a-995b-4557-a5d6-a168d50b1416
+
 
 
 | operation| state |
