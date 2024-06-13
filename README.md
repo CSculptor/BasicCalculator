@@ -17,7 +17,6 @@ https://github.com/LatifEmbedded/Keypad-Lcd-Calculator/assets/155848361/57b4c48a
 | a   * b  | allowed |
 | a   /  b | allowed |
 | -a  /  b | allowed |
-| +a  -  b | allowed |
 | -a  *  b | allowed |
 | -a  -  b | allowed |
 | -a  +  b | allowed |
