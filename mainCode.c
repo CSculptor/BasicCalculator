@@ -1,11 +1,24 @@
+/*
+**************************************************************************************************************************
+* PROJECT : BASIC CALCULATOR THAT SUPPORT +, -, *, /																	 *
+* PLATFROM : PIC18F452 MICROCHIP MICROCONTROLLER																		 *
+* CREATOR : DALI FETHI ABDELLATIF																						 *
+* USING THE REVERSE POLISH NOTATION IN ORDER TO CONVERT THE INPUT INFIX EXPRESSION TO POSTFIX							 *
+* THE MAXIM NUMBER ALLOWED IS FROM 0 TO 9, IF YOU ENTER 10 AS TEN IT WILL BE EVALUATED AS 1 AND 0                        *
+* USING KEYPAD AS INPUT DEVICE AND LCD AS DISPLAY DEVICE                                                                 *
+* THE CODE WAS TESTED AND SUPPORT GIVING FLOAT NUMBER UP TO 3 DIGITS AFTER DECIMAL POINT                                 *
+* THE NEGATIVE SIGN IS SUPPORT EITHER AS INPUT OR OUTPUT    														     *
+																														 *
+* THIS CODE FOR ONLY LEARNING PURPOSES AND IF ANY BUG ENCOUNTERED THEN I'M HAPPY TO FIX IT BY SENDING ME AN EMAIL        *
+***************************************************************************************************************************
+*/
 #include <p18f452.h>
 #pragma config WDT = OFF
 
 #define		rs		PORTCbits.RC0
 #define 	rw 		PORTCbits.RC1
 #define 	en		PORTCbits.RC2
-#define 	MAX 	20
-#define 	LINE    16
+#define 	MAX 	16
 
 unsigned char string[MAX], j = 0, state = 0, stack[MAX], postFix[MAX], k = 0;
 signed float stackSecond[MAX];
@@ -32,6 +45,11 @@ void convertInfixToPostfix(void);
 void testOperator(unsigned char value);
 void operandToList(unsigned char value);
 signed float calculatePostfix(void);
+void displayResult(signed float number);
+void positiveNumber(signed float number);
+void negativeNumber(signed float number);
+void calculating(signed int number);
+void screenDisplay(void);
 
 #pragma interrupt myFunction
 void myFunction(void)
@@ -303,6 +321,12 @@ void clearScreen(void)
 	LATD = 0x01;
 	commandInst();
 	delay250ms();
+	j = 0;
+	while(j<MAX)
+		string[j++] = '\0';
+	j = 0;
+	TOP = -1;
+	k = j;
 }
 void checkInput(void)
 {
@@ -334,19 +358,79 @@ void checkInput(void)
 	if(flag)
 	{
 		signed float number = 0;
-		signed int valeur = 0;
 		convertInfixToPostfix();
-		secondLine();
  		number = calculatePostfix();
-		valeur = (signed int)number;
-		LATD = valeur + 0x30;
-		dataInst();
-		busyFlag();
-		LATD = '.';
-		dataInst();
-		busyFlag();
-		number = (number - valeur) * 10;
-		LATD  = ((signed int) number) + 0x30;
+		displayResult(number);
+	}
+}
+void displayResult(signed float number)
+{
+	secondLine();
+	if(number >= 0)
+		positiveNumber(number);
+	else
+		negativeNumber(-1*number);
+}
+void calculating(signed int number)
+{
+	while(number != 0)
+	{
+		push((number%10) + 0x30);
+		number /= 10;
+	}
+}
+void positiveNumber(signed float number)
+{
+	signed int value = (signed int)number;
+	signed float decimalPart = (float)(number - value);
+	decimalPart *= 1000;
+	value = (int)decimalPart;
+	TOP = -1;
+	if(value == 0)
+	{
+		push(0x30);
+		push(0x30);
+		push(0x30);
+	}
+	else
+		calculating(value);
+	stack[++TOP] = '.';
+	value = (signed int)number;
+	if(value == 0)
+		push(0x30);
+	else	
+		calculating(value);
+	screenDisplay();
+}
+void negativeNumber(signed float number)
+{
+	signed int value = (signed int)number;
+	signed float decimalPart = (float)(number - value);
+	decimalPart *= 1000;
+	value = (int)decimalPart;
+	TOP = -1;
+	if(value == 0)
+	{
+		push(0x30);
+		push(0x30);
+		push(0x30);
+	}
+	else
+		calculating(value);
+	stack[++TOP] = '.';
+	value = (signed int)number;	
+	if(value == 0)
+		push(0x30);
+	else	
+		calculating(value);
+	push('-');
+	screenDisplay();
+}
+void screenDisplay(void)
+{
+	while(TOP != -1)
+	{
+		LATD = pop();
 		dataInst();
 		busyFlag();
 	}
@@ -383,7 +467,7 @@ void clearSecondLine(void)
 {
 	unsigned char i = 0;
 	secondLine();
-	while(i<LINE)	
+	while(i<MAX)	
 	{	
 		LATD = 0x20;
 		dataInst();
