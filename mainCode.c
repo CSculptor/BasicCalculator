@@ -20,7 +20,7 @@
 #define 	en		PORTCbits.RC2
 #define 	MAX 	16
 
-unsigned char string[MAX], j = 0, state = 0, stack[MAX], postFix[MAX], k = 0;
+unsigned char string[MAX], j = 0, state = 0, stack[MAX], postFix[MAX], k = 0, etat = 0;
 float stackSecond[MAX];
 signed char TOP = -1;
 
@@ -335,6 +335,7 @@ void clearScreen(void)
 	j = 0;
 	TOP = -1;
 	k = j;
+	etat = 0;
 }
 void checkInput(void)
 {
@@ -364,7 +365,8 @@ void checkInput(void)
 		signed float number = 0;
 		convertInfixToPostfix();
  		number = calculatePostfix();
-		displayResult(number);
+		if(!etat)
+			displayResult(number);
 	}
 }
 void displayResult(signed float number)
@@ -552,7 +554,7 @@ signed float calculatePostfix(void)
 		else
 		{
 			value_1 = stackSecond[TOP--];
-			value_2 = stackSecond[TOP--];
+			value_2 = stackSecond[TOP--];	
 			switch(postFix[i])
 			{
 				case '+' :
@@ -562,7 +564,14 @@ signed float calculatePostfix(void)
 					stackSecond[++TOP] = value_2 - value_1;
 					break;
 				case '/' :
-					stackSecond[++TOP] = value_2 / value_1;
+					if(value_1 == 0)
+					{
+						displayError();
+						etat = 1;
+						return 0;
+					}
+					else
+						stackSecond[++TOP] = value_2 / value_1;
 					break;
 				case '*' :
 					stackSecond[++TOP] = value_2 * value_1;
