@@ -21,7 +21,7 @@
 #define 	MAX 	16
 
 unsigned char string[MAX], j = 0, state = 0, stack[MAX], postFix[MAX], k = 0;
-signed float stackSecond[MAX];
+float stackSecond[MAX];
 signed char TOP = -1;
 
 void initiaLcd(void);			
@@ -323,14 +323,22 @@ void clearScreen(void)
 	delay250ms();
 	j = 0;
 	while(j<MAX)
-		string[j++] = '\0';
+	{
+		string[j] = '\0';
+		postFix[j] = '\0';
+		stack[j] = '\0';
+		++j;
+	}
+	j = 0;
+	while(j < MAX)
+		stackSecond[j++] = 0;
 	j = 0;
 	TOP = -1;
 	k = j;
 }
 void checkInput(void)
 {
-	unsigned char i = 0, flag = 1, value = 0;
+	unsigned char i = 0, flag = 1;
 	while(string[i] != '\0')
 	{
 		if(string[i] == '(')
@@ -343,11 +351,7 @@ void checkInput(void)
 				break;
 			}
 			else
-			{	
-				value = pop();
-				if(value == ')' && string[i] == ')')				
-					flag = 0;
-			}
+				pop();
 		}
 		++i;
 	}
@@ -439,10 +443,6 @@ void push(unsigned char value)
 {
 	stack[++TOP] = value;
 }
-unsigned char pop(void)
-{
-	return stack[TOP--];
-}
 void displayError(void)
 {
 	unsigned char error[] = "_ERROR_", i = 0;
@@ -529,12 +529,16 @@ void testOperator(unsigned char value)
 	{
 		while(stack[TOP] != '(')
 			operandToList(pop());
-		--TOP;
+		pop();
 	}
 }
 void operandToList(unsigned char value)
 {
-	postFix[k++] = value;	
+	postFix[k++] = value;
+}
+unsigned char pop(void)
+{
+	return stack[TOP--];
 }
 signed float calculatePostfix(void)
 {
