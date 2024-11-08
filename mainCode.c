@@ -1,16 +1,12 @@
 /*
-**************************************************************************************************************************
-* PROJECT : BASIC CALCULATOR THAT SUPPORT +, -, *, /																	 *
-* PLATFROM : PIC18F452 MICROCHIP MICROCONTROLLER																		 *
-* CREATOR : DALI FETHI ABDELLATIF																						 *
-* USING THE REVERSE POLISH NOTATION IN ORDER TO CONVERT THE INPUT INFIX EXPRESSION TO POSTFIX							 *
-* THE MAXIM NUMBER ALLOWED IS FROM 0 TO 9, IF YOU ENTER 10 AS TEN IT WILL BE EVALUATED AS 1 AND 0                        *
-* USING KEYPAD AS INPUT DEVICE AND LCD AS DISPLAY DEVICE                                                                 *
-* THE CODE WAS TESTED AND SUPPORT GIVING FLOAT NUMBER UP TO 3 DIGITS AFTER DECIMAL POINT                                 *
-* THE NEGATIVE SIGN IS SUPPORT EITHER AS INPUT OR OUTPUT    														     *
-																														 *
-* THIS CODE FOR ONLY LEARNING PURPOSES AND IF ANY BUG ENCOUNTERED THEN I'M HAPPY TO FIX IT BY SENDING ME AN EMAIL        *
-***************************************************************************************************************************
+ * A BASIC CALCULATOR THAT SUPPORTS (+,-,/,*)
+ * HEAR I'M USING REVERSE POLISH NOTATION BASED ON STACK DATA STRUCTURE TO EVALUATE EXPRESSIONS
+ * USING INTERRUPT TO HANDL INPUT FROM THE KEYPAD(PORTB CHANGE INTERRUPT)
+ * 
+
+                                         * BASIC INSTRUCTIONS MUST BE FOLLOWED *
+ * EACH NUMBER CANNOT EXCEEDS 1 DIGIT
+ * YOU USE THE TWO BUTTONS CONNECTED TO INT0 AND INT1 IN ORDER TO USE PARENTHESES
 */
 #include <p18f452.h>
 #pragma config WDT = OFF
