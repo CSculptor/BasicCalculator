@@ -1,1 +1,1 @@
-Works good, need some modifications for better memory usage and speed up execution.
+check the [@show](https://github.com/SysDevJ/BasicCalculator/blob/main/show.mp4)
